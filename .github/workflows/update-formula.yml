@@ -1,0 +1,80 @@
+name: Update Formula
+
+# Triggered by a repository_dispatch event from AgentEnsemble/agentensemble
+# after a release tag is pushed and the viz binaries have been uploaded to the
+# GitHub Release. The payload contains:
+#   version - the semver string (e.g. "1.2.3")
+#
+# Required repository secret: GITHUB_TOKEN (auto-provided, write access to this repo)
+#
+# The workflow downloads the three release tarballs, computes their SHA256
+# checksums, updates Formula/agentensemble-viz.rb, commits, and pushes.
+# No manual interaction is required.
+
+on:
+  repository_dispatch:
+    types: [new-release]
+
+permissions:
+  contents: write
+
+jobs:
+  update-formula:
+    name: Update agentensemble-viz formula
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download release tarballs and compute SHA256
+        id: sha256
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          BASE="https://github.com/AgentEnsemble/agentensemble/releases/download/v${VERSION}"
+
+          wget --quiet "${BASE}/agentensemble-viz-darwin-arm64.tar.gz" -O darwin-arm64.tar.gz
+          wget --quiet "${BASE}/agentensemble-viz-darwin-x64.tar.gz"   -O darwin-x64.tar.gz
+          wget --quiet "${BASE}/agentensemble-viz-linux-x64.tar.gz"    -O linux-x64.tar.gz
+
+          SHA_DARWIN_ARM64=$(sha256sum darwin-arm64.tar.gz | awk '{print $1}')
+          SHA_DARWIN_X64=$(sha256sum darwin-x64.tar.gz   | awk '{print $1}')
+          SHA_LINUX_X64=$(sha256sum linux-x64.tar.gz    | awk '{print $1}')
+
+          echo "darwin_arm64=${SHA_DARWIN_ARM64}" >> "$GITHUB_OUTPUT"
+          echo "darwin_x64=${SHA_DARWIN_X64}"     >> "$GITHUB_OUTPUT"
+          echo "linux_x64=${SHA_LINUX_X64}"       >> "$GITHUB_OUTPUT"
+
+      - name: Update formula version, URLs, and SHA256 checksums
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+          SHA_DARWIN_ARM64: ${{ steps.sha256.outputs.darwin_arm64 }}
+          SHA_DARWIN_X64: ${{ steps.sha256.outputs.darwin_x64 }}
+          SHA_LINUX_X64: ${{ steps.sha256.outputs.linux_x64 }}
+        run: |
+          FORMULA="Formula/agentensemble-viz.rb"
+
+          # Update the version field
+          sed -i "s/^  version \"[^\"]*\"/  version \"${VERSION}\"/" "${FORMULA}"
+
+          # Update the version embedded in all download URLs
+          sed -i "s|/releases/download/v[^/]*/|/releases/download/v${VERSION}/|g" "${FORMULA}"
+
+          # Update SHA256 values - comment anchors ensure unambiguous matching
+          sed -i "s/sha256 \"[a-f0-9]*\" # DARWIN_ARM64_SHA256/sha256 \"${SHA_DARWIN_ARM64}\" # DARWIN_ARM64_SHA256/" "${FORMULA}"
+          sed -i "s/sha256 \"[a-f0-9]*\" # DARWIN_X64_SHA256/sha256 \"${SHA_DARWIN_X64}\" # DARWIN_X64_SHA256/"     "${FORMULA}"
+          sed -i "s/sha256 \"[a-f0-9]*\" # LINUX_X64_SHA256/sha256 \"${SHA_LINUX_X64}\" # LINUX_X64_SHA256/"         "${FORMULA}"
+
+          echo "Updated formula for v${VERSION}"
+          grep -E "version|url|sha256" "${FORMULA}"
+
+      - name: Commit and push updated formula
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/agentensemble-viz.rb
+          git commit -m "chore: update agentensemble-viz to v${VERSION}"
+          git push
