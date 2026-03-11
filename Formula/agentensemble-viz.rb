@@ -4,25 +4,25 @@
 class AgentensembleViz < Formula
   desc "Trace viewer for AgentEnsemble execution graphs and timelines"
   homepage "https://github.com/AgentEnsemble/agentensemble"
-  version "2.5.0"
+  version "2.6.0"
   license "MIT"
 
   on_macos do
     on_arm do
-      url "https://github.com/AgentEnsemble/agentensemble/releases/download/v2.5.0/agentensemble-viz-darwin-arm64.tar.gz"
-      sha256 "f20d178637f4d15fa0ddb7b1e46bda774041108b46147527106bbbc319071d03" # DARWIN_ARM64_SHA256
+      url "https://github.com/AgentEnsemble/agentensemble/releases/download/v2.6.0/agentensemble-viz-darwin-arm64.tar.gz"
+      sha256 "48fd0730c0a8c0c0c898268cda762b95ea967dc30bacfd595e38a6147d6d6cce" # DARWIN_ARM64_SHA256
     end
 
     on_intel do
-      url "https://github.com/AgentEnsemble/agentensemble/releases/download/v2.5.0/agentensemble-viz-darwin-x64.tar.gz"
-      sha256 "50c5434f9b982288b62c25954bdeff6b6407de382da51199dde7fc9d44f65fbb" # DARWIN_X64_SHA256
+      url "https://github.com/AgentEnsemble/agentensemble/releases/download/v2.6.0/agentensemble-viz-darwin-x64.tar.gz"
+      sha256 "1cfac8d4b650864084ca1949cda62ab69ebcddae85120f6db1f6b1656458a7f4" # DARWIN_X64_SHA256
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/AgentEnsemble/agentensemble/releases/download/v2.5.0/agentensemble-viz-linux-x64.tar.gz"
-      sha256 "fc95effa28897f2e4802c95621e0d43edb718091bc3383fa301624538635d93e" # LINUX_X64_SHA256
+      url "https://github.com/AgentEnsemble/agentensemble/releases/download/v2.6.0/agentensemble-viz-linux-x64.tar.gz"
+      sha256 "635557786c677c874010893b22c995769d694357c1b9692c2b4da0ff7ecbc2ba" # LINUX_X64_SHA256
     end
   end
 
